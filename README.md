@@ -15,7 +15,7 @@ This project is a comprehensive doctor-patient interaction application developed
 - **MongoDB**: NoSQL database used for storing data related to patients, doctors, appointments, and more.
 - **Express.js**: Web application framework for building the backend API endpoints and handling HTTP requests.
 - **React.js**: Frontend JavaScript library used for building interactive user interfaces for both web and mobile applications.
-- **Node.js**: JavaScript runtime environment for executing server-side code and building the backend of the application.
+- **TypeScript**: JavaScript runtime environment for executing server-side code and building the backend of the application.
 
 
 
