@@ -1,21 +1,36 @@
-# Doctor-Patient Interaction Application
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
-This project is a comprehensive doctor-patient interaction application developed using the MERN (MongoDB, Express.js, React.js, Node.js) stack. It facilitates seamless communication between healthcare professionals and patients, aiming to enhance doctor-patient communication and improve healthcare accessibility.
+## Getting Started
 
-## Features
+First, run the development server:
 
-- **Full-Stack Development**: Leveraged the MERN stack to build both the backend and frontend components of the application.
-- **Web Application for Doctors**: Designed an intuitive web application interface tailored for healthcare professionals, offering a range of functionalities to streamline interactions.
-- **Mobile Application for Patients**: Engineered a mobile application providing patients with convenient access to the platform, ensuring cross-platform compatibility.
-- **User Interface Design**: Implemented user-friendly interfaces for both doctors and patients, prioritizing ease of use and accessibility.
-- **Cross-Platform Compatibility**: Ensured the application works seamlessly across different devices and platforms, allowing for flexibility in accessing healthcare services.
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
 
-## Technologies Used
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-- **MongoDB**: NoSQL database used for storing data related to patients, doctors, appointments, and more.
-- **Express.js**: Web application framework for building the backend API endpoints and handling HTTP requests.
-- **React.js**: Frontend JavaScript library used for building interactive user interfaces for both web and mobile applications.
-- **TypeScript**: JavaScript runtime environment for executing server-side code and building the backend of the application.
+You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
 
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Learn More
 
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
