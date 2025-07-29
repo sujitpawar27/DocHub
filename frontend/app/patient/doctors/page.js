@@ -35,7 +35,9 @@ export default function SearchDoctorsPage() {
     return doctors.filter((doc) => {
       const matchesSearch =
         doc.fullName?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-        doc.specialization.toLowerCase().includes(debouncedSearch.toLowerCase());
+        doc.specialization
+          .toLowerCase()
+          .includes(debouncedSearch.toLowerCase());
       const matchesSpec = specialization
         ? doc.specialization === specialization
         : true;

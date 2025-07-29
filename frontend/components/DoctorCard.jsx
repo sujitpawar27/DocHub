@@ -6,9 +6,14 @@ import { Separator } from "@/components/ui/separator";
 import { Star } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-export default function DoctorCard({ doctor, onBook, actionLabel = "Book Now" }) {
+export default function DoctorCard({
+  doctor,
+  onBook,
+  actionLabel = "Book Now",
+}) {
   const router = useRouter();
-  const handleProfile = () => router.push(`/patient/doctorProfile/${doctor._id || doctor.id}`);
+  const handleProfile = () =>
+    router.push(`/patient/doctorProfile/${doctor._id || doctor.id}`);
   const handleBook = () => onBook?.(doctor);
 
   return (
@@ -21,11 +26,19 @@ export default function DoctorCard({ doctor, onBook, actionLabel = "Book Now" })
             e.currentTarget.src = "/default-avatar.png";
           }}
         />
-        <AvatarFallback className="text-2xl text-blue-700 font-bold">{doctor?.fullName?.[0] || "U"}</AvatarFallback>
+        <AvatarFallback className="text-2xl text-blue-700 font-bold">
+          {doctor?.fullName?.[0] || "U"}
+        </AvatarFallback>
       </Avatar>
-      <div className="text-xl font-bold text-blue-900 text-center mb-1">{doctor.fullName}</div>
-      <Badge className="mb-2 bg-blue-100 text-blue-700 px-3 py-1 rounded-full capitalize tracking-wide text-md border-none">{doctor.specialization}</Badge>
-      <div className="text-gray-500 text-sm mb-1">{doctor.experience} yrs experience</div>
+      <div className="text-xl font-bold text-blue-900 text-center mb-1">
+        {doctor.fullName}
+      </div>
+      <Badge className="mb-2 bg-blue-100 text-blue-700 px-3 py-1 rounded-full capitalize tracking-wide text-md border-none">
+        {doctor.specialization}
+      </Badge>
+      <div className="text-gray-500 text-sm mb-1">
+        {doctor.experience} yrs experience
+      </div>
       <div className="flex items-center gap-1 mb-1">
         {[...Array(5)].map((_, i) => (
           <Star
@@ -38,7 +51,9 @@ export default function DoctorCard({ doctor, onBook, actionLabel = "Book Now" })
             }
           />
         ))}
-        <span className="text-xs text-gray-500 ml-2">{doctor.rating?.toFixed(1) || "-"}</span>
+        <span className="text-xs text-gray-500 ml-2">
+          {doctor.rating?.toFixed(1) || "-"}
+        </span>
       </div>
       <Separator className="my-2 w-full" />
       <div className="flex gap-3 w-full mt-2">
@@ -48,15 +63,15 @@ export default function DoctorCard({ doctor, onBook, actionLabel = "Book Now" })
           className="flex-1 rounded-full border-blue-500 text-blue-700 hover:bg-blue-50 font-semibold"
           onClick={handleProfile}
         >
-          View Profile
+          Book an appointment
         </Button>
-        <Button
+        {/* <Button
           size="sm"
           className="flex-1 rounded-full bg-blue-600 text-white hover:bg-blue-700 font-semibold shadow"
           onClick={handleBook}
         >
           {actionLabel}
-        </Button>
+        </Button> */}
       </div>
     </Card>
   );
