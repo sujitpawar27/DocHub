@@ -18,6 +18,7 @@ import {
   Video,
   X,
 } from "lucide-react";
+import { CopilotPopup } from "@copilotkit/react-ui";
 const { getPatientAppointments } = await import(
   "@/app/api/patient/appointment"
 );
@@ -246,6 +247,15 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+      <CopilotPopup
+        instructions={
+          "You are assisting the user as best as you can. Answer in the best way possible given the data you have."
+        }
+        labels={{
+          title: "Popup Assistant",
+          initial: "Need any help?",
+        }}
+      />
     </div>
   );
 }
