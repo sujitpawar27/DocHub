@@ -18,6 +18,7 @@ import {
   Video,
   X,
 } from "lucide-react";
+
 import { CopilotPopup } from "@copilotkit/react-ui";
 const { getPatientAppointments } = await import(
   "@/app/api/patient/appointment"
@@ -252,8 +253,8 @@ export default function DashboardPage() {
           "You are assisting the user as best as you can. Answer in the best way possible given the data you have."
         }
         labels={{
-          title: "Popup Assistant",
-          initial: "Need any help?",
+          title: "Medical Assistant",
+          initial: "Hi! 👋 How can I assist you today?",
         }}
       />
     </div>

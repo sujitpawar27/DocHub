@@ -1,35 +1,44 @@
-const DoctorSlot = require('../models/DoctorSlot');
-const Doctor = require('../models/User');
+const DoctorSlot = require("../models/DoctorSlot");
+const Doctor = require("../models/User");
 
 // Helper: Map weekday names to JS Date numbers
 const weekdayMap = {
-  'Sunday': 0,
-  'Monday': 1,
-  'Tuesday': 2,
-  'Wednesday': 3,
-  'Thursday': 4,
-  'Friday': 5,
-  'Saturday': 6,
+  Sunday: 0,
+  Monday: 1,
+  Tuesday: 2,
+  Wednesday: 3,
+  Thursday: 4,
+  Friday: 5,
+  Saturday: 6,
 };
 
 function parseTimeString(timeStr) {
   // Handles '10:00', '18:00', '10am', '6pm', etc.
-  if (timeStr.includes(':')) {
+  if (timeStr.includes(":")) {
     // '10:00'
-    const [h, m] = timeStr.split(':').map(Number);
+    const [h, m] = timeStr.split(":").map(Number);
     return { h, m: m || 0 };
-  } else if (timeStr.toLowerCase().includes('am') || timeStr.toLowerCase().includes('pm')) {
+  } else if (
+    timeStr.toLowerCase().includes("am") ||
+    timeStr.toLowerCase().includes("pm")
+  ) {
     let h = parseInt(timeStr, 10);
     let m = 0;
-    if (timeStr.toLowerCase().includes('pm') && h !== 12) h += 12;
-    if (timeStr.toLowerCase().includes('am') && h === 12) h = 0;
+    if (timeStr.toLowerCase().includes("pm") && h !== 12) h += 12;
+    if (timeStr.toLowerCase().includes("am") && h === 12) h = 0;
     return { h, m };
   }
   // fallback
   return { h: Number(timeStr) || 0, m: 0 };
 }
 
-async function generateSlotsInternal({ doctorId, availability, slotDuration = 30, weeks = 2, type = 'inperson' }) {
+async function generateSlotsInternal({
+  doctorId,
+  availability,
+  slotDuration = 30,
+  weeks = 2,
+  type = "inperson",
+}) {
   // Clean up old slots for the next N weeks
   const start = new Date();
   const end = new Date();
@@ -45,9 +54,11 @@ async function generateSlotsInternal({ doctorId, availability, slotDuration = 30
   const slots = [];
   for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
     const dayNum = d.getDay();
-    const dayName = Object.keys(weekdayMap).find(key => weekdayMap[key] === dayNum);
+    const dayName = Object.keys(weekdayMap).find(
+      (key) => weekdayMap[key] === dayNum
+    );
     // Find availability for this day
-    const dayAvailability = availability.find(av => av.day === dayName);
+    const dayAvailability = availability.find((av) => av.day === dayName);
     if (!dayAvailability || !Array.isArray(dayAvailability.slots)) continue;
 
     for (const range of dayAvailability.slots) {
@@ -63,7 +74,9 @@ async function generateSlotsInternal({ doctorId, availability, slotDuration = 30
 
       // Validate: start must be before end
       if (slotStart >= slotEnd) {
-        console.warn(`Invalid time range: ${startTime}-${endTime} on ${dayName}. Skipping.`);
+        console.warn(
+          `Invalid time range: ${startTime}-${endTime} on ${dayName}. Skipping.`
+        );
         continue;
       }
 
@@ -86,21 +99,29 @@ exports.generateSlotsInternal = generateSlotsInternal;
 
 exports.generateSlots = async (req, res) => {
   try {
-    const { doctorId, startDate, endDate, availability, type, slotDuration } = req.body;
-    const slots = await generateSlotsInternal({ doctorId, startDate, endDate, availability, type, slotDuration });
+    const { doctorId, startDate, endDate, availability, type, slotDuration } =
+      req.body;
+    const slots = await generateSlotsInternal({
+      doctorId,
+      startDate,
+      endDate,
+      availability,
+      type,
+      slotDuration,
+    });
     res.json({ slots });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: err.message || 'Server error' });
+    res.status(500).json({ error: err.message || "Server error" });
   }
 };
 
 exports.getSlotsbyId = async (req, res) => {
   try {
-    const doctorId = req.query.doctorId; 
-    console.log("DoctorId",doctorId);
-    
-    const days = parseInt(req.query.days || '7');
+    const doctorId = req.query.doctorId;
+    console.log("DoctorId", doctorId);
+
+    const days = parseInt(req.query.days || "7");
 
     const start = new Date();
     const end = new Date();
@@ -116,17 +137,17 @@ exports.getSlotsbyId = async (req, res) => {
     res.json({ slots });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to fetch upcoming slots' });
+    res.status(500).json({ error: "Failed to fetch upcoming slots" });
   }
 };
 
 exports.getOrGenerateSlotsForDate = async (req, res) => {
   try {
-    const { doctorId, date, type = 'inperson', slotDuration = 30 } = req.query;
+    const { doctorId, date, type = "inperson", slotDuration = 30 } = req.query;
     if (!doctorId || !date) {
-      return res.status(400).json({ error: 'doctorId and date are required' });
+      return res.status(400).json({ error: "doctorId and date are required" });
     }
-
+    console.log("getOrGenerateSlotsForDate", req.query);
     const dayStart = new Date(date);
     dayStart.setHours(0, 0, 0, 0);
     const dayEnd = new Date(date);
@@ -135,23 +156,35 @@ exports.getOrGenerateSlotsForDate = async (req, res) => {
     // Fetch all slots of the day (both types)
     let allSlots = await DoctorSlot.find({
       doctorId,
-      datetime: { $gte: dayStart, $lte: dayEnd }
+      datetime: { $gte: dayStart, $lte: dayEnd },
     }).sort({ datetime: 1 });
 
     // If none exist, try generating
     if (allSlots.length === 0) {
       const doctor = await Doctor.findById(doctorId);
       if (!doctor || !Array.isArray(doctor.availability)) {
-        return res.status(404).json({ error: 'Doctor not found or no availability set' });
+        return res
+          .status(404)
+          .json({ error: "Doctor not found or no availability set" });
       }
+      const weekday = dayStart.toLocaleDateString("en-US", { weekday: "long" });
+      const dayAvailability = doctor.availability.find((av) => {
+        const obj = av.toObject();
+        return obj.day.toLowerCase() === weekday.toLowerCase();
+      });
 
-      const weekday = dayStart.toLocaleDateString('en-US', { weekday: 'long' });
-      const dayAvailability = doctor.availability.find(
-        (av) => av.day.toLowerCase() === weekday.toLowerCase()
-      );
+      console.log("Day availabilty", dayAvailability);
 
-      if (!dayAvailability || !Array.isArray(dayAvailability.slots) || dayAvailability.slots.length === 0) {
-        return res.status(404).json({ error: 'Doctor not available on selected date' });
+      if (
+        !dayAvailability ||
+        !Array.isArray(dayAvailability.slots) ||
+        dayAvailability.slots.length === 0
+      ) {
+        return res
+          .status(404)
+          .json({
+            error: `Doctor is not available on ${weekday}. Please select a different date.`,
+          });
       }
 
       const generatedSlots = [];
@@ -166,8 +199,12 @@ exports.getOrGenerateSlotsForDate = async (req, res) => {
         slotStart.setHours(sh, sm, 0, 0);
         let slotEnd = new Date(dayStart);
         slotEnd.setHours(eh, em, 0, 0);
-        if (slotStart >= slotEnd) continue;
-
+        if (slotStart >= slotEnd) {
+          console.warn(
+            `⚠️ Skipping invalid slot range for ${obj.day}: ${startTime} - ${endTime}`
+          );
+          continue;
+        }
         while (slotStart < slotEnd) {
           generatedSlots.push({
             doctorId,
@@ -180,7 +217,9 @@ exports.getOrGenerateSlotsForDate = async (req, res) => {
       }
 
       if (generatedSlots.length === 0) {
-        return res.status(404).json({ error: 'No slots could be generated for this date' });
+        return res
+          .status(404)
+          .json({ error: "No slots could be generated for this date" });
       }
 
       await DoctorSlot.insertMany(generatedSlots);
@@ -188,29 +227,28 @@ exports.getOrGenerateSlotsForDate = async (req, res) => {
       // Re-fetch all slots after generation
       allSlots = await DoctorSlot.find({
         doctorId,
-        datetime: { $gte: dayStart, $lte: dayEnd }
+        datetime: { $gte: dayStart, $lte: dayEnd },
       }).sort({ datetime: 1 });
     }
 
     // Find all already booked slot timestamps
     const bookedTimes = new Set(
       allSlots
-        .filter(slot => slot.available === false)
-        .map(slot => new Date(slot.datetime).getTime())
+        .filter((slot) => slot.available === false)
+        .map((slot) => new Date(slot.datetime).getTime())
     );
 
     // Filter only slots of requested type & update their availability status
     const filteredSlots = allSlots
-      .filter(slot => slot.type === type)
-      .map(slot => ({
+      .filter((slot) => slot.type === type)
+      .map((slot) => ({
         ...slot.toObject(),
-        available: !bookedTimes.has(new Date(slot.datetime).getTime())
+        available: !bookedTimes.has(new Date(slot.datetime).getTime()),
       }));
 
     return res.json({ slots: filteredSlots });
-
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: err.message || 'Server error' });
+    res.status(500).json({ error: err.message || "Server error" });
   }
 };
