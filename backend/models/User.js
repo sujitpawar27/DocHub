@@ -49,17 +49,17 @@ const userSchema = new mongoose.Schema({
   specialization: { type: String },
   qualifications: { type: [String] },
   experience: { type: Number }, // in years
-  availability: {
-    type: [{
+  availability: [
+    {
       day: { type: String },
-      slots: [{
-        start: { type: String },
-        end: { type: String }
-      }]
-    }],
-    default: [],
-    required: true
-  },
+      slots: [
+        {
+          start: { type: String },
+          end: { type: String }
+        }
+      ]
+    }
+  ],
 
   // For Patient role
   medicalHistory: {
