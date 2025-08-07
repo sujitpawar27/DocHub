@@ -31,9 +31,29 @@ export const uploadAvatar = async (formData) => {
   return res.data;
 };
 
+export const updateAvailability = async (doctorId, isAvailable) => {
+  const token = localStorage.getItem("token");
+  const res = await axios.put(
+    `${BASE_URI}/${doctorId}/availability`,
+    { isAvailable },
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+  return res.data;
+};
+
 export const getStats = async () => {
   const token = localStorage.getItem("token");
   const res = await axios.get(`${BASE_URI}/stats`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.data;
+};
+
+export const fetchdoctoravailability = async (doctorId) => {
+  const token = localStorage.getItem("token");
+  const res = await axios.get(`${BASE_URI}/${doctorId}/availability`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return res.data;

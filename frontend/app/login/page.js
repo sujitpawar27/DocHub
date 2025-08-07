@@ -47,6 +47,7 @@ export default function LoginPage() {
 
       if (user.role === "doctor") {
         localStorage.setItem("specialization", user.specialization || "");
+        localStorage.setItem("available", user.isAvailable);
         router.push("/doctor/dashboard");
       } else {
         router.push("/patient/dashboard");

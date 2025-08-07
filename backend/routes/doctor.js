@@ -10,6 +10,12 @@ const { suggestDoctor } = require("../controllers/suggestDoctor");
 router.get("/me/:id", auth, doctorController.getProfile);
 router.put("/me", auth, doctorController.updateProfile);
 router.post("/me/avatar", auth, doctorController.uploadAvatar);
+router.put(
+  "/:id/availability",
+  auth,
+  doctorController.updateDoctorAvailability
+);
+router.get("/:id/availability", auth, doctorController.fetchDoctorAvailability);
 
 // Patients
 router.get("/patients", auth, doctorController.getPatients); // ?search=, ?sort=

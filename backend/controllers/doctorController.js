@@ -33,6 +33,30 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
+exports.updateDoctorAvailability = async (req, res) => {
+  const doctorId = req.params.id;
+  const { isAvailable } = req.body;
+
+  try {
+    const doctor = await User.findOne({ _id: doctorId, role: "doctor" });
+    if (!doctor) {
+      return res.status(404).json({ message: "Doctor not found" });
+    }
+
+    doctor.isAvailable = isAvailable;
+    await doctor.save();
+
+    return res.status(200).json({
+      message: `Doctor availability updated to ${isAvailable}`,
+      doctorId: doctor._id,
+      isAvailable: doctor.isAvailable,
+    });
+  } catch (error) {
+    console.error("Error updating availability:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
 exports.uploadAvatar = async (req, res) => {
   try {
     const user = await User.findById(req.user.userId);
@@ -191,32 +215,33 @@ exports.updatePrescriptionbyId = async (req, res) => {
 exports.getStats = async (req, res) => {
   try {
     const { today, endOfWeek } = getStartAndEndOfWeek();
-    console.log("Fetching stats for the week:");
-    console.log("Start of week (today):", today);
-    console.log("End of week:", endOfWeek);
+    // console.log("Fetching stats for the week:");
+    // console.log("Start of week (today):", today);
+    // console.log("End of week:", endOfWeek);
 
     const appointmentsThisWeek = await Appointment.find({
       date: { $gte: today, $lte: endOfWeek },
     });
 
-    console.log(
-      "Total appointments found this week:",
-      appointmentsThisWeek.length
-    );
+    // console.log(
+    //   "Total appointments found this week:",
+    //   appointmentsThisWeek.length
+    // );
 
     const consultationsThisWeek = appointmentsThisWeek.length;
 
-    const newPatients = await Appointment.countDocuments({
-      doctor: req.user._id, 
+    const newPatients = await Appointment.distinct("patient", {
+      doctor: req.user.userId,
       status: "pending",
     });
+    const newPatientCount = newPatients.length;
 
-    console.log("Consultations this week:", consultationsThisWeek);
-    console.log("New patients (status: pending):", newPatients);
+    // console.log("Consultations this week:", consultationsThisWeek);
+    // console.log("New patients (status: pending):", newPatientCount);
 
     res.json({
       consultationsThisWeek,
-      newPatients,
+      newPatients: newPatientCount,
     });
   } catch (err) {
     console.error("Stats error:", err);
@@ -235,3 +260,20 @@ function getStartAndEndOfWeek() {
   end.setHours(23, 59, 59, 999);
   return { today: start, endOfWeek: end };
 }
+
+exports.fetchDoctorAvailability = async (req, res) => {
+  try {
+    const doctorId = req.params.id;
+
+    const doctor = await User.findById(doctorId).select("isAvailable role");
+
+    if (!doctor || doctor.role !== "doctor") {
+      return res.status(404).json({ message: "Doctor not found" });
+    }
+
+    res.status(200).json({ available: doctor.isAvailable });
+  } catch (err) {
+    console.error("❌ Error fetching doctor availability:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};

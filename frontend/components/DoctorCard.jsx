@@ -30,6 +30,22 @@ export default function DoctorCard({
           {doctor?.fullName?.[0] || "U"}
         </AvatarFallback>
       </Avatar>
+      {/* Online/Offline Indicator */}
+      <div className="flex items-center gap-2 mb-1">
+        <span
+          className={`h-3 w-3 rounded-full ${
+            doctor.isAvailable ? "bg-green-500 animate-pulse" : "bg-gray-400"
+          }`}
+          title={doctor.isAvailable ? "Online" : "Offline"}
+        ></span>
+        <span
+          className={`text-xs font-semibold ${
+            doctor.isAvailable ? "text-green-600" : "text-gray-500"
+          }`}
+        >
+          {doctor.isAvailable ? "Online" : "Offline"}
+        </span>
+      </div>
       <div className="text-xl font-bold text-blue-900 text-center mb-1">
         {doctor.fullName}
       </div>
