@@ -20,13 +20,18 @@ import {
 } from "lucide-react";
 
 import { CopilotPopup } from "@copilotkit/react-ui";
+import { getRecentConsultedDoctors } from "@/app/api/patient/profile";
 const { getPatientAppointments } = await import(
   "@/app/api/patient/appointment"
 );
 
 export default function DashboardPage() {
-  const [user, setUser] = useState(null);
   const router = useRouter();
+
+  const [user, setUser] = useState(null);
+  const [recentDoctors, setRecentDoctors] = useState([]);
+  const [upcomingAppointments, setUpcomingAppointments] = useState([]);
+  const [appointmentsLoading, setAppointmentsLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -48,25 +53,21 @@ export default function DashboardPage() {
     router.push("/login");
   };
 
-  const recentDoctors = [
-    {
-      name: "Dr. Mehta",
-      specialization: "Cardiologist",
-      avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-    },
-    {
-      name: "Dr. Sharma",
-      specialization: "Dermatologist",
-      avatar: "https://randomuser.me/api/portraits/women/44.jpg",
-    },
-    {
-      name: "Dr. Patel",
-      specialization: "Pediatrician",
-      avatar: "https://randomuser.me/api/portraits/men/65.jpg",
-    },
-  ];
-  const [upcomingAppointments, setUpcomingAppointments] = useState([]);
-  const [appointmentsLoading, setAppointmentsLoading] = useState(true);
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      const userId = localStorage.getItem("userId");
+      try {
+        const docs = await getRecentConsultedDoctors(userId);
+        console.log("Recent Doctors:", docs);
+
+        setRecentDoctors(docs);
+      } catch (err) {
+        console.error("Failed to fetch recent doctors:", err);
+      }
+    };
+
+    if (user) fetchDoctors();
+  }, [user]);
 
   useEffect(() => {
     const fetchAppointments = async () => {
@@ -95,34 +96,50 @@ export default function DashboardPage() {
             Welcome, Sujit
           </CardTitle>
           <CardDescription className="text-gray-500 mt-1">
-            Your next appointment:{" "}
-            <span className="font-semibold text-blue-600">Dr. Mehta</span>{" "}
-            (Today at 5:30 PM)
+            {upcomingAppointments.length > 0 ? (
+              <>
+                Your next appointment:{" "}
+                <span className="font-semibold text-blue-600">
+                  {upcomingAppointments[0].doctor.fullName}
+                </span>{" "}
+                (
+                {new Date(upcomingAppointments[0].date).toLocaleDateString(
+                  undefined,
+                  {
+                    weekday: "short",
+                    month: "short",
+                    day: "numeric",
+                  }
+                )}{" "}
+                at{" "}
+                {new Date(upcomingAppointments[0].date).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+                )
+              </>
+            ) : (
+              "You have no upcoming appointments."
+            )}
           </CardDescription>
         </div>
       </Card>
 
       {/* 2x2 Grid of Icon Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-        <Card className="flex flex-col items-center justify-center p-6 cursor-pointer hover:scale-105 transition bg-white rounded-xl shadow-md group">
-          <Search className="text-blue-600 mb-2" size={36} />
-          <span className="font-semibold text-lg text-blue-600">
-            Search Doctors
-          </span>
-        </Card>
-        <Card className="flex flex-col items-center justify-center p-6 cursor-pointer hover:scale-105 transition bg-white rounded-xl shadow-md group">
+        <Card
+          className="flex flex-col items-center justify-center p-6 cursor-pointer hover:scale-105 transition bg-white rounded-xl shadow-md group"
+          onClick={() => router.push("/patient/doctors")}
+        >
           <Calendar className="text-blue-600 mb-2" size={36} />
           <span className="font-semibold text-lg text-blue-600">
             Book Appointment
           </span>
         </Card>
-        <Card className="flex flex-col items-center justify-center p-6 cursor-pointer hover:scale-105 transition bg-white rounded-xl shadow-md group">
-          <FileText className="text-blue-600 mb-2" size={36} />
-          <span className="font-semibold text-lg text-blue-600">
-            View Prescriptions
-          </span>
-        </Card>
-        <Card className="flex flex-col items-center justify-center p-6 cursor-pointer hover:scale-105 transition bg-white rounded-xl shadow-md group">
+        <Card
+          className="flex flex-col items-center justify-center p-6 cursor-pointer hover:scale-105 transition bg-white rounded-xl shadow-md group"
+          onClick={() => router.push("/patient/health-history")}
+        >
           <Stethoscope className="text-blue-600 mb-2" size={36} />
           <span className="font-semibold text-lg text-blue-600">
             Health History
@@ -133,7 +150,6 @@ export default function DashboardPage() {
       {/* Separator */}
       <div className="h-px bg-gray-200 my-2 w-full" />
 
-      {/* Side-by-side sections */}
       <div className="flex flex-col md:flex-row gap-6">
         {/* Recent Doctors */}
         <Card className="flex-1 bg-white rounded-xl shadow-md p-4 flex flex-col">
@@ -143,26 +159,34 @@ export default function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
-            {recentDoctors.map((doc, idx) => (
-              <div
-                key={idx}
-                className="flex items-center gap-4 bg-gray-50 rounded-lg p-3"
-              >
-                <Avatar className="w-12 h-12">
-                  <AvatarImage src={doc.avatar} alt={doc.name} />
-                  <AvatarFallback>{doc.name.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <div className="font-semibold text-gray-800">{doc.name}</div>
-                  <div className="text-gray-500 text-sm">
-                    {doc.specialization}
-                  </div>
-                </div>
-                <Button size="sm" variant="outline">
-                  View Profile
-                </Button>
+            {recentDoctors.length === 0 ? (
+              <div className="text-gray-500 text-center py-4">
+                No recent doctors
               </div>
-            ))}
+            ) : (
+              recentDoctors.map((doc, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center gap-4 bg-gray-50 rounded-lg p-3"
+                >
+                  <Avatar className="w-12 h-12">
+                    <AvatarImage src={doc.avatar} alt={doc.name} />
+                    <AvatarFallback>{doc.name.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <div className="font-semibold text-gray-800">
+                      {doc.name}
+                    </div>
+                    <div className="text-gray-500 text-sm">
+                      {doc.specialization}
+                    </div>
+                  </div>
+                  <Button size="sm" variant="outline">
+                    View Profile
+                  </Button>
+                </div>
+              ))
+            )}
           </CardContent>
         </Card>
 

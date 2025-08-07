@@ -78,14 +78,12 @@ function HistoryItem({ item }) {
 
   return (
     <Card className="group relative overflow-hidden rounded-2xl border-0 bg-white shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5">
-      {/* Status indicator line */}
       <div className={`absolute top-0 left-0 w-full h-1 ${
         item.status === "completed" ? "bg-green-500" : 
         item.status === "cancelled" ? "bg-red-500" : "bg-yellow-500"
       }`} />
       
       <div className="p-5">
-        {/* Header with date and badges */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2 text-gray-600">
             <Calendar className="w-4 h-4 text-blue-500" />

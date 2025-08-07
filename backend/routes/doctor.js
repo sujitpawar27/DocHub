@@ -19,6 +19,7 @@ router.get("/patients/:id/history", auth, doctorController.getPatientHistory);
 router.post("/prescription", auth, doctorController.createPrescription);
 router.get("/prescription/:id", auth, doctorController.getPrescriptionsbyId);
 router.put("/prescription/:id", auth, doctorController.updatePrescriptionbyId);
+router.get("/stats", auth, doctorController.getStats);
 
 // Suggest doctor by condition (AI-powered)
 router.post("/suggest", async (req, res) => {

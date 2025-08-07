@@ -20,7 +20,8 @@ exports.updateProfile = async (req, res) => {
       { $set: req.body },
       { new: true, runValidators: true }
     ).select("-password");
-    if (!updatedUser) return res.status(404).json({ message: "User not found" });
+    if (!updatedUser)
+      return res.status(404).json({ message: "User not found" });
     res.json(updatedUser);
   } catch (err) {
     res.status(500).json({ message: "Server error" });
@@ -53,7 +54,6 @@ exports.getHealthHistory = async (req, res) => {
   try {
     const patientId = req.user.userId;
 
-    // Fetch all appointments for this patient
     const appointments = await Appointment.find({ patient: patientId })
       .populate("doctor", "fullName specialization avatarUrl")
       .sort({ date: -1 });
@@ -65,7 +65,7 @@ exports.getHealthHistory = async (req, res) => {
 
     // Group by doctor
     const grouped = {};
-    appointments.forEach(appt => {
+    appointments.forEach((appt) => {
       const docId = appt.doctor?._id?.toString() || "unknown";
       if (!grouped[docId]) {
         grouped[docId] = {
@@ -76,7 +76,7 @@ exports.getHealthHistory = async (req, res) => {
       }
       grouped[docId].appointments.push(appt);
     });
-    prescriptions.forEach(rx => {
+    prescriptions.forEach((rx) => {
       const docId = rx.doctor?._id?.toString() || "unknown";
       if (!grouped[docId]) {
         grouped[docId] = {
@@ -92,13 +92,17 @@ exports.getHealthHistory = async (req, res) => {
     const result = Object.values(grouped).sort((a, b) => {
       // Sort by most recent appointment or prescription
       const aDate = [
-        ...(a.appointments.map(x => x.date)),
-        ...(a.prescriptions.map(x => x.date)),
-      ].sort().reverse()[0];
+        ...a.appointments.map((x) => x.date),
+        ...a.prescriptions.map((x) => x.date),
+      ]
+        .sort()
+        .reverse()[0];
       const bDate = [
-        ...(b.appointments.map(x => x.date)),
-        ...(b.prescriptions.map(x => x.date)),
-      ].sort().reverse()[0];
+        ...b.appointments.map((x) => x.date),
+        ...b.prescriptions.map((x) => x.date),
+      ]
+        .sort()
+        .reverse()[0];
       return new Date(bDate) - new Date(aDate);
     });
 
@@ -113,15 +117,20 @@ exports.getHealthHistory = async (req, res) => {
 exports.getPrescriptionById = async (req, res) => {
   try {
     const patientId = req.user.userId;
-    const appointmentid = req.params.id; // assuming route is /prescription/appointment/:id
-   console.log("getPrescriptionById",req);
+    const appointmentid = req.params.id;
+    console.log("getPrescriptionById", req);
 
-    const prescription = await Prescription.findOne({ appointmentid, patientId })
+    const prescription = await Prescription.findOne({
+      appointmentid,
+      patientId,
+    })
       .populate("doctor", "fullName specialization avatarUrl")
       .populate("patientId", "fullName age gender");
 
     if (!prescription) {
-      return res.status(404).json({ message: "No prescription found for this appointment." });
+      return res
+        .status(404)
+        .json({ message: "No prescription found for this appointment." });
     }
 
     res.json(prescription);
@@ -131,3 +140,65 @@ exports.getPrescriptionById = async (req, res) => {
   }
 };
 
+exports.getRecentConsultedDoctors = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    console.log("Fetching recent consulted doctors for user:", userId);
+
+    const appointments = await Appointment.find({
+      patient: userId,
+      status: { $in: ["completed", "pending"] },
+    })
+      .sort({ date: -1 })
+      .populate("doctor");
+
+    console.log("Fetched appointments:", appointments.length);
+
+    const seenDoctors = new Map();
+    const recentDoctors = [];
+
+    for (const appt of appointments) {
+      console.log("Processing appointment:", appt._id);
+
+      const doctor = appt.doctor;
+      if (!doctor) {
+        console.log(`Appointment ${appt._id} has no populated doctor.`);
+        continue;
+      }
+
+      console.log("Doctor info:", {
+        id: doctor._id,
+        name: doctor.fullName,
+        role: doctor.role,
+        specialization: doctor.specialization,
+      });
+
+      if (doctor.role !== "doctor") {
+        console.log(`Skipping user ${doctor._id} — not a doctor.`);
+        continue;
+      }
+
+      const docId = doctor._id.toString();
+      if (!seenDoctors.has(docId)) {
+        seenDoctors.set(docId, true);
+        recentDoctors.push({
+          _id: docId,
+          name: doctor.fullName,
+          specialization: doctor.specialization,
+          avatar: doctor.avatar,
+        });
+        console.log(`Added doctor ${docId} to recent list.`);
+      } else {
+        console.log(`Doctor ${docId} already added, skipping.`);
+      }
+    }
+
+    const finalList = recentDoctors.slice(0, 5);
+    console.log("Final recent doctors list:", finalList);
+
+    res.json(finalList);
+  } catch (err) {
+    console.error("Error fetching recent doctors", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};

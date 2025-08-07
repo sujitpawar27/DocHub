@@ -14,12 +14,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-
+import { Eye, EyeOff } from "lucide-react";
 import { Mail, Lock } from "lucide-react";
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
   const router = useRouter();
 
   const handleChange = (e) => {
@@ -35,11 +37,14 @@ export default function LoginPage() {
       const { token, user } = res.data;
       localStorage.setItem("token", token);
       localStorage.setItem("userId", user.id);
-      localStorage.setItem("user", JSON.stringify({
-        fullName: user.fullName,
-        avatarUrl: user.avtarUrl
-      }));
-      
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          fullName: user.fullName,
+          avatarUrl: user.avtarUrl,
+        })
+      );
+
       if (user.role === "doctor") {
         localStorage.setItem("specialization", user.specialization || "");
         router.push("/doctor/dashboard");
@@ -98,16 +103,25 @@ export default function LoginPage() {
                 <Lock className="w-4 h-4 text-gray-500" />
                 Password
               </Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                placeholder="••••••••"
-                value={formData.password}
-                onChange={handleChange}
-                className="focus-visible:ring-2 focus-visible:ring-indigo-400"
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter Your Password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="focus-visible:ring-2 focus-visible:ring-indigo-400 pr-10"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
           </CardContent>
 

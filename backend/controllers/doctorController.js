@@ -6,12 +6,12 @@ const { log } = require("util");
 const slotController = require("./slotController"); // Import slotController
 // Add models as needed
 
-
 // Get doctor profile
 exports.getProfile = async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select("-password");
-    if (!user || user.role !== "doctor") return res.status(404).json({ message: "Doctor not found" });
+    if (!user || user.role !== "doctor")
+      return res.status(404).json({ message: "Doctor not found" });
     res.json(user);
   } catch (err) {
     res.status(500).json({ message: "Server error" });
@@ -25,7 +25,8 @@ exports.updateProfile = async (req, res) => {
       { $set: req.body },
       { new: true, runValidators: true }
     ).select("-password");
-    if (!updatedUser || updatedUser.role !== "doctor") return res.status(404).json({ message: "Doctor not found" });
+    if (!updatedUser || updatedUser.role !== "doctor")
+      return res.status(404).json({ message: "Doctor not found" });
     res.json(updatedUser);
   } catch (err) {
     res.status(500).json({ message: "Server error" });
@@ -33,10 +34,10 @@ exports.updateProfile = async (req, res) => {
 };
 
 exports.uploadAvatar = async (req, res) => {
-  
   try {
     const user = await User.findById(req.user.userId);
-    if (!user || user.role !== "doctor") return res.status(404).json({ message: "Doctor not found" });
+    if (!user || user.role !== "doctor")
+      return res.status(404).json({ message: "Doctor not found" });
     await user.save();
     res.json({ avatarUrl: user.avatarUrl });
   } catch (err) {
@@ -44,24 +45,24 @@ exports.uploadAvatar = async (req, res) => {
   }
 };
 
-
-
-
-
-
 exports.getPatients = async (req, res) => {
   try {
     const { search = "", sort = "newest" } = req.query;
     // Find all patients who have appointments with this doctor
-    const patientIds = await Appointment.find({ doctor: req.user.userId })
-      .distinct("patient");
+    const patientIds = await Appointment.find({
+      doctor: req.user.userId,
+    }).distinct("patient");
     let query = { _id: { $in: patientIds }, role: "patient" };
     if (search) {
       query.fullName = { $regex: search, $options: "i" };
     }
-    let patientsQuery = User.find(query).select("fullName avatarUrl email phone gender age");
-    if (sort === "newest") patientsQuery = patientsQuery.sort({ createdAt: -1 });
-    else if (sort === "oldest") patientsQuery = patientsQuery.sort({ createdAt: 1 });
+    let patientsQuery = User.find(query).select(
+      "fullName avatarUrl email phone gender age"
+    );
+    if (sort === "newest")
+      patientsQuery = patientsQuery.sort({ createdAt: -1 });
+    else if (sort === "oldest")
+      patientsQuery = patientsQuery.sort({ createdAt: 1 });
     // For "most" visits, sort after fetching
     let patients = await patientsQuery.exec();
     if (sort === "most") {
@@ -70,8 +71,14 @@ exports.getPatients = async (req, res) => {
         { $match: { doctor: req.user.userId } },
         { $group: { _id: "$patient", count: { $sum: 1 } } },
       ]);
-      const visitsMap = Object.fromEntries(visits.map(v => [v._id.toString(), v.count]));
-      patients = patients.sort((a, b) => (visitsMap[b._id.toString()] || 0) - (visitsMap[a._id.toString()] || 0));
+      const visitsMap = Object.fromEntries(
+        visits.map((v) => [v._id.toString(), v.count])
+      );
+      patients = patients.sort(
+        (a, b) =>
+          (visitsMap[b._id.toString()] || 0) -
+          (visitsMap[a._id.toString()] || 0)
+      );
     }
     res.json(patients);
   } catch (err) {
@@ -101,19 +108,18 @@ exports.getPatientHistory = async (req, res) => {
     // Optionally: include patient info separately from one of the populated documents
     // const patient = appointments[0]?.patient || prescriptions[0]?.patient || null;
 
-    res.json({  appointments, prescriptions });
+    res.json({ appointments, prescriptions });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
   }
 };
 
-
 exports.createPrescription = async (req, res) => {
   try {
     const { patientId, medicines, notes, appointmentid } = req.body;
-    console.log("createPrescription",req);
-    
+    console.log("createPrescription", req);
+
     let prescription = await Prescription.findOne({ appointmentid });
 
     if (prescription) {
@@ -138,11 +144,10 @@ exports.createPrescription = async (req, res) => {
   }
 };
 
-
 exports.getPrescriptionsbyId = async (req, res) => {
   try {
     const patientId = req.params.id;
-      const prescription = await Prescription.find({ patientId} )
+    const prescription = await Prescription.find({ patientId })
       .populate("patientId", "fullName avatarUrl")
       .populate("doctor", "fullName");
 
@@ -160,7 +165,7 @@ exports.getPrescriptionsbyId = async (req, res) => {
   }
 };
 
-exports.updatePrescriptionbyId = async (req,res)=>{
+exports.updatePrescriptionbyId = async (req, res) => {
   try {
     const { medicines } = req.body;
     if (!Array.isArray(medicines) || medicines.length === 0) {
@@ -181,4 +186,52 @@ exports.updatePrescriptionbyId = async (req,res)=>{
     console.error("Error updating prescription:", err);
     res.status(500).json({ message: "Server error" });
   }
+};
+
+exports.getStats = async (req, res) => {
+  try {
+    const { today, endOfWeek } = getStartAndEndOfWeek();
+    console.log("Fetching stats for the week:");
+    console.log("Start of week (today):", today);
+    console.log("End of week:", endOfWeek);
+
+    const appointmentsThisWeek = await Appointment.find({
+      date: { $gte: today, $lte: endOfWeek },
+    });
+
+    console.log(
+      "Total appointments found this week:",
+      appointmentsThisWeek.length
+    );
+
+    const consultationsThisWeek = appointmentsThisWeek.length;
+
+    const newPatients = await Appointment.countDocuments({
+      doctor: req.user._id, 
+      status: "pending",
+    });
+
+    console.log("Consultations this week:", consultationsThisWeek);
+    console.log("New patients (status: pending):", newPatients);
+
+    res.json({
+      consultationsThisWeek,
+      newPatients,
+    });
+  } catch (err) {
+    console.error("Stats error:", err);
+    res.status(500).json({ error: "Failed to fetch stats" });
+  }
+};
+
+function getStartAndEndOfWeek() {
+  const now = new Date();
+  const today = new Date(now.setHours(0, 0, 0, 0));
+  const dayOfWeek = today.getDay();
+  const start = new Date(today);
+  start.setDate(today.getDate() - dayOfWeek);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  end.setHours(23, 59, 59, 999);
+  return { today: start, endOfWeek: end };
 }
