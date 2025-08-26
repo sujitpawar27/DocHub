@@ -63,7 +63,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md shadow-xl border border-blue-100 backdrop-blur-md rounded-3xl bg-white/70 py-0">
         <CardHeader className="bg-gradient-to-tr from-indigo-500 to-blue-600 text-white px-6 py-5 rounded-t-3xl">
           <CardTitle className="text-2xl font-bold tracking-wide">
-            Welcome Back
+            Welcome To DocHub
           </CardTitle>
           <p className="text-sm text-white/80 mt-1">Sign in to your account</p>
         </CardHeader>

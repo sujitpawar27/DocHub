@@ -16,6 +16,7 @@ export default function SearchDoctorsPage() {
     const fetchDoctors = async () => {
       const allDoctors = await getAllDoctors();
       setDoctors(allDoctors);
+      console.log("Fetched doctors:", allDoctors);
 
       const uniqueSpecs = [
         ...new Set(allDoctors.map((doc) => doc.specialization)),
@@ -49,12 +50,9 @@ export default function SearchDoctorsPage() {
   return (
     <div className="bg-gradient-to-br from-blue-50 via-white to-blue-100 px-4 py-10">
       <div className="max-w-7xl mx-auto">
-        {/* Page Title */}
         <h1 className="text-4xl font-extrabold text-blue-800 text-center mb-10 drop-shadow">
           Book an Appointment
         </h1>
-
-        {/* Filters Section */}
         <div className="flex flex-col md:flex-row md:items-center gap-4 bg-white p-6 mb-10 rounded-xl shadow border border-blue-100">
           <Input
             type="text"
@@ -89,6 +87,7 @@ export default function SearchDoctorsPage() {
               <DoctorCard
                 key={doctor._id || doctor.id}
                 doctor={doctor}
+                isAvailable={doctor.isAvailable} // Pass isAvailable
                 actionLabel="Book Now"
                 onAction={() => alert(`Booking with ${doctor.fullName}`)}
               />
